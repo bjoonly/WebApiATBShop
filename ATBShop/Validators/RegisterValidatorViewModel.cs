@@ -11,26 +11,37 @@ namespace ATBShop.Validators
         public RegisterValidatorViewModel(UserManager<AppUser> userManager)
         {
             _userManager = userManager;
-            RuleFor(x => x.Email)
-               .NotEmpty().WithMessage("Поле пошта є обов'язковим!")
-               .EmailAddress().WithMessage("Пошта є не коректною!")
+
+            RuleFor(x => x.FirstName).Cascade(CascadeMode.Stop)
+                .NotEmpty().WithMessage("{PropertyName} is required!")
+                .MinimumLength(2).WithMessage("{PropertyName} must be at least 2 characters!");
+
+            RuleFor(x => x.SecondName).Cascade(CascadeMode.Stop)
+           .NotEmpty().WithMessage("{PropertyName} is required!")
+           .MinimumLength(2).WithMessage("{PropertyName} must be at least 2 characters!");
+
+            RuleFor(x => x.Email).Cascade(CascadeMode.Stop)
+               .NotEmpty().WithMessage("{PropertyName} is required!")
+               .EmailAddress().WithMessage("Invalid format of {PropertyName}!")
                .DependentRules(() =>
                {
                    RuleFor(x => x.Email).Must(BeUniqueEmail)
 
-                    .WithMessage("Дана пошта уже зареєстрована!");
+                    .WithMessage("This {PropertyName} is already registered!");
                });
-            RuleFor(x => x.Password)
-                .NotEmpty().WithName("Password").WithMessage("Поле пароль є обов'язковим!")
-                .MinimumLength(5).WithName("Password").WithMessage("Поле пароль має містити міннімум 5 символів!"); 
 
-            RuleFor(x => x.FirstName)
-                .NotEmpty().WithMessage("Поле пароль є обов'язковим!")
-                .MinimumLength(2).WithMessage("Поле має мати міннімум 2 символів!");
+            RuleFor(x => x.Phone).Cascade(CascadeMode.Stop)
+              .NotEmpty().WithName("Phone number").WithMessage("{PropertyName} is required!")
+              .Matches(@"^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$")
+              .WithMessage("Invalid format of {PropertyName}!");
 
-            RuleFor(x => x.ConfirmPassword)
-                .NotEmpty().WithName("ConfirmPassword").WithMessage("Поле є обов'язковим!")
-                 .Equal(x => x.Password).WithMessage("Поролі не співпадають!");
+            RuleFor(x => x.Password).Cascade(CascadeMode.Stop)
+                .NotEmpty().WithMessage("{PropertyName} is required!")
+                .MinimumLength(5).WithMessage("{PropertyName} must be at least 5 characters!"); 
+
+            RuleFor(x => x.ConfirmPassword).Cascade(CascadeMode.Stop)
+                .NotEmpty().WithName("Confirm Password").WithMessage("{PropertyName} is required!")
+                 .Equal(x => x.Password).WithMessage("Password and {PropertyName} do not match!");
         }
         private bool BeUniqueEmail(string email)
         {

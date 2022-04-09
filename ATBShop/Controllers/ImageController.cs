@@ -1,7 +1,9 @@
 ﻿
+using ATBShop.Helpers;
 using ATBShop.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Drawing.Imaging;
 
 namespace ATBShop.Controllers
 {
@@ -16,16 +18,21 @@ namespace ATBShop.Controllers
             try
             {
 
-            var bytes = Convert.FromBase64String(image.base64);
-            string randomFileName = Path.GetRandomFileName() + ".jpg";
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "uploads", randomFileName);
-            using (var imageFile = new FileStream(path, FileMode.Create))
-            {
-                imageFile.Write(bytes, 0, bytes.Length);
-                imageFile.Flush();
+                var img = image.Base64.FromBase64StringToImage();
+                string randomFileName =Path.GetRandomFileName()+ "{0}.jpg";
+                var dir = Path.Combine(Directory.GetCurrentDirectory(), "uploads",randomFileName);
+
+                img.Save(String.Format(dir,""), ImageFormat.Jpeg);
+
+                var img100x100 = img.Resize(100, 100);
+                img100x100.Save(String.Format(dir, "_100x100"), ImageFormat.Jpeg);
+
+                var img250x250 = img.Resize(250, 250);
+                img250x250.Save(String.Format(dir, "_250x250"), ImageFormat.Jpeg);
+
+                return Ok(new {fileName= String.Format(randomFileName, "") });
             }
-            return Ok(new {fileName= randomFileName });
-            }
+            
             catch (Exception ex)
             {
 
