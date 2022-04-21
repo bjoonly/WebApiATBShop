@@ -4,7 +4,7 @@ using ATBShop.Models;
 using AutoMapper;
 using DAL.Data;
 using DAL.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Drawing.Imaging;
@@ -43,11 +43,10 @@ namespace ATBShop.Controllers
             if (!result.Succeeded)
                 return BadRequest(new { errors = result.Errors });
 
-
             return Ok(new { token = _jwtTokenService.CreateTokenAsync(user).Result });
         }
-
         [HttpGet]
+        [Authorize]
         [Route("users")]
         public async Task<IActionResult> Users()
         {
@@ -56,5 +55,24 @@ namespace ATBShop.Controllers
             return Ok(list);
         }
 
+        /// <summary>
+        /// Login on site
+        /// </summary>
+        /// <param name="model">User email and password </param>
+        /// <returns>Authorization token</returns>
+        [HttpPost]
+        [Route("login")]
+        public async Task<IActionResult> Login([FromBody] LoginViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null)
+            {
+                if (await _userManager.CheckPasswordAsync(user, model.Password))
+                {
+                    return Ok(new { token = _jwtTokenService.CreateTokenAsync(user).Result });
+                }
+            }
+            return BadRequest(new { error = "User is not found" });
+        }
     }
 }

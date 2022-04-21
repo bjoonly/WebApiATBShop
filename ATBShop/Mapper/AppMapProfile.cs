@@ -15,7 +15,7 @@ namespace ATBShop.Mapper
                 .ForMember(x => x.UserName, opt => opt.MapFrom(x => x.Email));
 
             CreateMap<AppUser, UserItemViewModel>()
-                .ForMember(x => x.Photo, opt => opt.MapFrom(x => Path.Combine(ImagePath.RootImagePath,x.Photo)))
+                .ForMember(x => x.Photo, opt => opt.MapFrom(x => ImagePath.RootImagePath + "/" + x.Photo))
                 .ForMember(x => x.Phone, opt => opt.MapFrom(x => x.PhoneNumber));
         }
     }
