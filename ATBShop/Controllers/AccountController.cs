@@ -1,4 +1,5 @@
-﻿using ATBShop.Helpers;
+﻿using ATBShop.Exceptions;
+using ATBShop.Helpers;
 using ATBShop.Interfaces;
 using ATBShop.Models;
 using AutoMapper;
@@ -65,14 +66,63 @@ namespace ATBShop.Controllers
         public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null)
+            if (user == null)
             {
+
                 if (await _userManager.CheckPasswordAsync(user, model.Password))
                 {
                     return Ok(new { token = _jwtTokenService.CreateTokenAsync(user).Result });
                 }
             }
-            return BadRequest(new { error = "User is not found" });
+            return BadRequest(new { error = "User doesn't exist" });
+        }
+
+        [HttpGet]
+        [Route("get-user/{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            var user = _context.Users.FirstOrDefault(x => x.Id == id);
+            if (user == null)
+                throw new AppException($"User with id {id} doesn't exist.");
+
+            return Ok(_mapper.Map<UserItemViewModel>(user));
+        }
+
+        [HttpPut]
+        [Route("edit-user/{id}")]
+        public async Task<IActionResult> EditUser(int id, EditUserViewModel model)
+        {
+            var user = _context.Users.FirstOrDefault(x => x.Id == id);
+            if (user == null)
+                throw new AppException($"User with id {id} doesn't exist.");
+
+            if (model.Photo != null)
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), model.Photo.Replace("images", "uploads").Remove(0, 1));
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", user.Photo);
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+
+                    var img = ImageWorker.FromBase64StringToImage(model.Photo);
+                    string randomFilename = Path.GetRandomFileName() + ".jpg";
+                    var dir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", randomFilename);
+                    img.Save(dir, ImageFormat.Jpeg);
+
+                    user.Photo = randomFilename;
+                }
+            }
+
+            user.Email = model.Email;
+            user.FirstName = model.FirstName;
+            user.SecondName = model.SecondName;
+            user.PhoneNumber = model.Phone;
+
+            await _userManager.UpdateAsync(user);
+
+            return Ok(_mapper.Map<UserItemViewModel>(user));
         }
     }
 }
