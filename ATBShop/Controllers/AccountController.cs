@@ -66,7 +66,7 @@ namespace ATBShop.Controllers
         public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+            if (user != null)
             {
 
                 if (await _userManager.CheckPasswordAsync(user, model.Password))
